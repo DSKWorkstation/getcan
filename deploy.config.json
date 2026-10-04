@@ -1,0 +1,5 @@
+{
+  "workerName": "getcan",
+  "databaseName": "getcan-db",
+  "databaseId": "PASTE_YOUR_DATABASE_ID_HERE"
+}

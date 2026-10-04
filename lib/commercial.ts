@@ -55,3 +55,13 @@ export const positiveInt = (value: unknown, max: number): number | null => {
   const number = Number(value);
   return Number.isInteger(number) && number > 0 && number <= max ? number : null;
 };
+
+export type LinkedCustomer = { id: number; distributor_id: number; name: string; address: string; usual_quantity: number };
+
+/** The customer a personal request link belongs to, or null for an unknown or revoked link. */
+export async function customerByToken(token: unknown): Promise<LinkedCustomer | null> {
+  if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) return null;
+  const hash = await sha256(token);
+  return database().prepare('SELECT id,distributor_id,name,address,usual_quantity FROM app_customers WHERE request_token_hash=? OR id IN (SELECT customer_id FROM app_customer_links WHERE token_hash=?)')
+    .bind(hash, hash).first<LinkedCustomer>();
+}

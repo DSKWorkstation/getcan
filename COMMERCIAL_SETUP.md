@@ -18,6 +18,26 @@ The existing public demo remains separate. This project is the distributor and c
 5. Deploy the Worker build and connect `getcan.in` / `www.getcan.in` to this new project only after production verification. DNS at the registrar will need the Cloudflare values shown by that account. The current demo custom-domain attachment must be removed before the same domain can point to a separate app.
 6. Smoke-test OTP, first paid sign-up, customer link, duplicate request, delivery, and plan expiry on a staging hostname. Then enable live keys and update the public domain.
 
+## Customer links, alerts and payments (added October 2026)
+
+These features need one new database migration and three new secrets on an existing deployment:
+
+1. Apply `drizzle/0010_grey_corsair.sql` to the production D1 database, for example `npx wrangler d1 execute getcan-db --remote --file drizzle/0010_grey_corsair.sql`.
+2. Set `LINK_SECRET` to a long random value (`npx wrangler secret put LINK_SECRET`). Customer links are then stored sealed with this secret, and links saved earlier are sealed the next time the distributor opens the desk. Keep this secret stable: if it changes or is removed, every customer link is replaced with a new one the next time it is shared.
+3. Run `node scripts/generate-vapid-keys.mjs` once and save the two printed values as `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Optionally set `VAPID_SUBJECT` to `mailto:` plus a support address. Without these keys everything works except phone notifications.
+
+What each feature does:
+
+- **Link reset.** Share order link has a New link button. The old link stops working at once, and alerts registered with it are removed.
+- **Customer page.** English, Tamil and Hindi (chosen from the phone's language, changeable). The customer can change the number of cans or cancel until the order is dispatched, and sees their amount due, empty cans and recent deliveries. When the distributor adds a UPI ID in Settings, customers with dues get a Pay by UPI button.
+- **Alerts.** The distributor's bell turns on phone notifications for new, changed and cancelled requests; with the desk open, new requests also chime. Customers can turn on alerts for when their water is on the way and delivered.
+- **Offline.** The desk opens from the last saved copy when there is no signal. Deliveries and empty-can pickups made offline are sent automatically when the connection returns; anything the server rejects is shown.
+- **Statements and reminders.** Ledger has a monthly statement per customer (WhatsApp or print). May need water soon has a Remind button that opens a WhatsApp draft with the customer's order link. Payments can be recorded as cash or UPI.
+
+## Tests
+
+`npm test` runs the route handlers against an in-memory SQLite copy of the D1 schema (all migrations applied) with MSG91, Turnstile, Razorpay and push services mocked. It covers sign-in, orders and the customer page, links, the Razorpay webhook and billing, and alerts.
+
 ## Local verification
 
 `npm run build` and `npx tsc --noEmit` passed on 2026-09-28. Migration constraints were exercised with an in-memory SQLite database. End-to-end provider flows require the account settings above and have not been tested.

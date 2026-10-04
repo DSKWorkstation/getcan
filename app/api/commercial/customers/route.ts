@@ -1,4 +1,5 @@
 import { activeDistributorId, database, jsonError, phoneNumber, positiveInt, randomToken, sha256 } from '@/lib/commercial';
+import { saveLink } from '@/lib/links';
 
 export async function GET(request: Request) {
   const owner = await activeDistributorId(request);
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
   try {
     const row = await database().prepare('INSERT INTO app_customers (distributor_id,name,phone,address,area,usual_quantity,frequency_days,request_token_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?) RETURNING id')
       .bind(owner, name, phone, address, area, quantity, frequency, await sha256(token), now, now).first<{ id: number }>();
-    if (row) await database().prepare('INSERT INTO app_customer_links (customer_id,distributor_id,token,token_hash) VALUES (?,?,?,?)').bind(row.id,owner,token,await sha256(token)).run();
+    if (row) await saveLink(owner, row.id, token);
     return Response.json({ id: row?.id, requestLink: `${new URL(request.url).origin}/c/${token}` }, { status: 201 });
   } catch (error) {
     if (String(error).includes('UNIQUE')) return jsonError('This phone is already in your customer list.', 409);

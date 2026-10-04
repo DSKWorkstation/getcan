@@ -3,7 +3,7 @@ import { activeDistributorId, database, jsonError } from '@/lib/commercial';
 export async function GET(request: Request) {
   const owner = await activeDistributorId(request);
   if (!owner) return jsonError('An active distributor plan is required.', 403);
-  const settings = await database().prepare('SELECT name,default_price_cents FROM app_distributors WHERE id=?').bind(owner).first();
+  const settings = await database().prepare('SELECT name,default_price_cents,upi_id FROM app_distributors WHERE id=?').bind(owner).first();
   return Response.json({ settings });
 }
 
@@ -14,8 +14,11 @@ export async function PATCH(request: Request) {
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   const name = String(body?.name ?? '').trim().slice(0, 80);
   const price = Number(body?.defaultPriceCents);
+  // A UPI ID (VPA) looks like name@bank; empty turns UPI payment links off.
+  const upi = String(body?.upiId ?? '').trim().slice(0, 100);
   if (!name || !Number.isInteger(price) || price < 0 || price > 100000) return jsonError('Check the name and price per can.', 400);
-  await database().prepare('UPDATE app_distributors SET name=?,default_price_cents=?,updated_at=? WHERE id=?')
-    .bind(name, price, new Date().toISOString(), owner).run();
+  if (upi && !/^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9.-]{1,63}$/.test(upi)) return jsonError('Check the UPI ID, for example name@okbank.', 400);
+  await database().prepare('UPDATE app_distributors SET name=?,default_price_cents=?,upi_id=?,updated_at=? WHERE id=?')
+    .bind(name, price, upi, new Date().toISOString(), owner).run();
   return Response.json({ ok: true });
 }

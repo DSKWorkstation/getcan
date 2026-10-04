@@ -1,4 +1,5 @@
 import { activeDistributorId, database, jsonError, positiveInt } from '@/lib/commercial';
+import { customerUpdate } from '@/lib/order-alerts';
 
 const stages = ['requested', 'accepted', 'out_for_delivery', 'delivered'] as const;
 
@@ -55,5 +56,6 @@ export async function PATCH(request: Request) {
     const result = await database().prepare('UPDATE app_orders SET status=?,updated_at=? WHERE id=? AND distributor_id=? AND status=?').bind(status, now, id, owner, current.status).run();
     if (!result.meta.changes) return jsonError('Order changed. Refresh and retry.', 409);
   }
+  await customerUpdate(owner, current.customer_id, status === 'delivered' ? 'delivered' : 'dispatched', current.quantity);
   return Response.json({ ok: true });
 }

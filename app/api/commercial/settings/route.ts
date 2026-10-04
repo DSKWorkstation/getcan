@@ -18,7 +18,9 @@ export async function PATCH(request: Request) {
   const upi = String(body?.upiId ?? '').trim().slice(0, 100);
   if (!name || !Number.isInteger(price) || price < 0 || price > 100000) return jsonError('Check the name and price per can.', 400);
   if (upi && !/^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9.-]{1,63}$/.test(upi)) return jsonError('Check the UPI ID, for example name@okbank.', 400);
-  await database().prepare('UPDATE app_distributors SET name=?,default_price_cents=?,upi_id=?,updated_at=? WHERE id=?')
-    .bind(name, price, upi, new Date().toISOString(), owner).run();
+  // The first save (the welcome steps, or Settings) completes onboarding.
+  const now = new Date().toISOString();
+  await database().prepare('UPDATE app_distributors SET name=?,default_price_cents=?,upi_id=?,onboarded_at=COALESCE(onboarded_at,?),updated_at=? WHERE id=?')
+    .bind(name, price, upi, now, now, owner).run();
   return Response.json({ ok: true });
 }

@@ -7,7 +7,7 @@ export async function GET(request: Request) {
  if(!owner)return jsonError('Sign in to open your desk.',401);
  const db=database(),now=new Date().toISOString();
  const [distributor,subscription]=await Promise.all([
-  db.prepare('SELECT name,default_price_cents,upi_id,created_at FROM app_distributors WHERE id=?').bind(owner).first<{name:string;default_price_cents:number;upi_id:string;created_at:string}>(),
+  db.prepare('SELECT name,default_price_cents,upi_id,onboarded_at,created_at FROM app_distributors WHERE id=?').bind(owner).first<{name:string;default_price_cents:number;upi_id:string;onboarded_at:string|null;created_at:string}>(),
   db.prepare('SELECT status,current_end_at,checkout_url FROM app_subscriptions WHERE distributor_id=?').bind(owner).first<{status:string;current_end_at:string|null;checkout_url:string|null}>()
  ]);
  if(!distributor)return jsonError('Sign in to open your desk.',401);
@@ -24,5 +24,5 @@ export async function GET(request: Request) {
   db.prepare('SELECT id,customer_id,amount_cents FROM app_payments WHERE distributor_id=? ORDER BY id DESC LIMIT 500').bind(owner).all(),
   ledger(owner)
  ]);
- return Response.json({billing,settings:{name:distributor.name,default_price_cents:distributor.default_price_cents,upi_id:distributor.upi_id},pushKey:pushPublicKey(),customers:customers.results,orders:orders.results,payments:payments.results,...accounts},{headers});
+ return Response.json({billing,settings:{name:distributor.name,default_price_cents:distributor.default_price_cents,upi_id:distributor.upi_id,onboarded:!!distributor.onboarded_at},pushKey:pushPublicKey(),customers:customers.results,orders:orders.results,payments:payments.results,...accounts},{headers});
 }

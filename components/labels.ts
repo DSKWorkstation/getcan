@@ -43,7 +43,7 @@ const strings: Record<string, [string, string]> = {
  'Advance paid':['முன்பணம்','अग्रिम भुगतान'],
  'Empty cans with you':['உங்களிடம் உள்ள காலி கேன்கள்','आपके पास खाली कैन'],
  'Pay by UPI':['UPI மூலம் செலுத்து','UPI से भुगतान करें'],
- 'If your UPI app shows a bank limit error, scan this QR code or pay to the UPI ID below from inside your app.':['உங்கள் UPI செயலி வங்கி வரம்பு பிழை காட்டினால், இந்த QR குறியீட்டை ஸ்கேன் செய்யவும் அல்லது கீழே உள்ள UPI ID-க்கு செயலிக்குள்ளேயே பணம் அனுப்பவும்.','अगर आपका UPI ऐप बैंक सीमा की त्रुटि दिखाए, तो यह QR कोड स्कैन करें या ऐप में जाकर नीचे दी गई UPI ID पर भुगतान करें।'],
+ 'Scan this QR code with any UPI app, or copy the UPI ID and pay inside your app.':['இந்த QR குறியீட்டை எந்த UPI செயலியிலும் ஸ்கேன் செய்யவும், அல்லது UPI ID-ஐ நகலெடுத்து செயலிக்குள் பணம் அனுப்பவும்.','इस QR कोड को किसी भी UPI ऐप से स्कैन करें, या UPI ID कॉपी करके ऐप में भुगतान करें।'],
  'Scan with any UPI app. On this phone, take a screenshot and use Scan from gallery.':['எந்த UPI செயலியிலும் ஸ்கேன் செய்யவும். இதே போனில், ஸ்கிரீன்ஷாட் எடுத்து கேலரியிலிருந்து ஸ்கேன் செய்யவும்.','किसी भी UPI ऐप से स्कैन करें। इसी फ़ोन पर स्क्रीनशॉट लेकर गैलरी से स्कैन करें।'],
  'UPI QR code':['UPI QR குறியீடு','UPI QR कोड'], 'UPI ID':['UPI ID','UPI ID'], 'Copy UPI ID':['UPI ID-ஐ நகலெடு','UPI ID कॉपी करें'], 'Copied':['நகலெடுக்கப்பட்டது','कॉपी हो गया'],
  'Get delivery alerts':['டெலிவரி அறிவிப்புகளைப் பெறு','डिलीवरी अलर्ट पाएँ'],

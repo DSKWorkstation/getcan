@@ -1,0 +1,1 @@
+ALTER TABLE `app_subscriptions` ADD `checkout_url` text;

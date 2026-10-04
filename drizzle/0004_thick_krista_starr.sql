@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `app_orders_one_open_per_customer` ON `app_orders` (`customer_id`) WHERE status <> 'delivered';

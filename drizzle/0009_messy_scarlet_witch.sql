@@ -1,0 +1,1 @@
+CREATE INDEX `app_orders_owner_customer_status` ON `app_orders` (`distributor_id`,`customer_id`,`status`);

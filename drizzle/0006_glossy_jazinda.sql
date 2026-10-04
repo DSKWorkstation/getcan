@@ -1,0 +1,1 @@
+ALTER TABLE `app_orders` ADD `route_rank` integer DEFAULT 0 NOT NULL;

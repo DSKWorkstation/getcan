@@ -1,5 +1,10 @@
 import { env } from 'cloudflare:workers';
 
+// Secrets set by piping from Windows PowerShell can carry a byte-order mark or a newline.
+const clean = (value?: string) => (value ?? '').replace(/[\uFEFF\u200B]/g, '').trim();
+export const razorpayPlanId = () => clean(env.RAZORPAY_PLAN_ID);
+export const razorpayKeyId = () => clean(env.RAZORPAY_KEY_ID);
+
 export function razorpayReady(): boolean {
   return Boolean(env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET && env.RAZORPAY_PLAN_ID && env.RAZORPAY_WEBHOOK_SECRET);
 }
@@ -9,7 +14,7 @@ export async function razorpayRequest(path: string, init?: RequestInit): Promise
   return fetch(`https://api.razorpay.com/v1/${path}`, {
     ...init,
     headers: {
-      Authorization: `Basic ${btoa(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`)}`,
+      Authorization: `Basic ${btoa(`${razorpayKeyId()}:${clean(env.RAZORPAY_KEY_SECRET)}`)}`,
       'Content-Type': 'application/json',
       ...init?.headers,
     },

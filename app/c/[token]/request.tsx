@@ -6,6 +6,7 @@ import InstallApp from '@/components/install-app';
 import LanguageSelect from '@/components/language-select';
 import { tx, type Language } from '@/components/labels';
 import { enablePush, pushEnabled, pushSupported } from '@/components/push-alerts';
+import UpiPay from '@/components/upi-pay';
 
 type Order = { id: number; quantity: number; price_cents: number; status: string; created_at: string };
 type Data = {
@@ -104,7 +105,6 @@ export default function CustomerRequest({ token }: { token: string }) {
   const locked = !!open && !editing;
   const balance = data?.account?.balanceCents ?? 0;
   const upi = data?.distributor.upi_id;
-  const upiLink = upi && balance > 0 ? `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(data!.distributor.name)}&am=${(balance / 100).toFixed(2)}&cu=INR&tn=${encodeURIComponent('GetCan water')}` : '';
   const recent = data?.orders.filter(o => o.status === 'delivered').slice(0, 5) ?? [];
   const cans = (n: number) => `${n} ${t(n === 1 ? 'can' : 'cans')}`;
 
@@ -122,7 +122,7 @@ export default function CustomerRequest({ token }: { token: string }) {
           {changeable(open.status) && !editing && !confirmCancel && <div className="gc-order-change"><button disabled={busy} onClick={() => { setQuantity(open.quantity); setEdited(true); setEditing(true); }}>{t('Change cans')}</button><button disabled={busy} onClick={() => setConfirmCancel(true)}><X size={16}/>{t('Cancel order')}</button></div>}
           {confirmCancel && <div className="gc-order-change"><strong>{t('Cancel this order?')}</strong><button className="danger" disabled={busy} onClick={() => void send('DELETE', { id: open.id }, 'Order cancelled.')}>{t('Cancel order')}</button><button disabled={busy} onClick={() => setConfirmCancel(false)}>{t('Keep order')}</button></div>}</div>}
         <div className="gc-customer-account"><h2><Wallet size={20}/>{t('Your account')}</h2><div className="gc-daily-summary"><div><small>{t(balance < 0 ? 'Advance paid' : 'Amount due')}</small><strong>{rupees(Math.abs(balance))}</strong></div><div><small>{t('Empty cans with you')}</small><strong>{data.account?.cansOut ?? 0}</strong></div></div>
-          <div className="gc-customer-account-actions">{upiLink && <a className="gc-primary" href={upiLink}>{t('Pay by UPI')} · {rupees(balance)}</a>}
+          <div className="gc-customer-account-actions">{upi && balance > 0 && <UpiPay upiId={upi} payee={data.distributor.name} amountCents={balance} t={t}/>}
             {data.pushKey && pushSupported() && (alertsOn ? <span className="gc-alerts-on"><BellRing size={17}/>{t('Delivery alerts are on')}</span> : <button className="gc-quiet" disabled={busy} onClick={() => void turnOnAlerts()}><Bell size={17}/>{t('Get delivery alerts')}</button>)}</div>
           {recent.length > 0 && <><h3>{t('Recent orders')}</h3><div className="gc-list">{recent.map(o => <div key={o.id} className="gc-order"><span><strong>{cans(o.quantity)}</strong><small>{new Date(o.created_at).toLocaleDateString(lang === 'en' ? 'en-IN' : `${lang}-IN`, { day: 'numeric', month: 'short' })} · {t('Delivered')}</small></span><strong>{rupees(o.quantity * o.price_cents)}</strong></div>)}</div></>}</div></>}
     </section></main>;

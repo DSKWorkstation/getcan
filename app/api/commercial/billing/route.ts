@@ -1,4 +1,4 @@
-import { database, distributorId, jsonError } from '@/lib/commercial';
+import { database, distributorId, jsonError, phoneNumber } from '@/lib/commercial';
 import { razorpayKeyId, razorpayPlanId, razorpayReady, razorpayRequest } from '@/lib/razorpay';
 
 type Subscription = { razorpay_id: string | null; checkout_url: string | null; status: string; current_end_at: string | null };
@@ -27,8 +27,11 @@ export async function POST(request: Request) {
   if (!planResponse.ok) return jsonError(`Razorpay could not load plan ${razorpayPlanId()} with the ${mode} keys (${planResponse.status}: ${String(plan?.error?.description ?? 'no details').slice(0, 160)}). Check the plan ID and that the plan is in ${mode} mode.`, 503);
   if (plan?.period !== 'monthly' || plan.interval !== 1 || plan.item?.amount !== 5000 || plan.item.currency !== 'INR')
     return jsonError(`The Razorpay plan must be ₹50 every 1 month in INR. Plan ${razorpayPlanId()} is ${(plan?.item?.amount ?? 0) / 100} ${plan?.item?.currency ?? '?'} every ${plan?.interval ?? '?'} ${plan?.period ?? '?'}.`, 503);
+  // Details for Razorpay Checkout, so the payer's verified mobile number is filled in for them.
+  const distributor = await database().prepare('SELECT name,phone FROM app_distributors WHERE id=?').bind(owner).first<{ name: string; phone: string }>();
+  const checkout = (subscriptionId: string) => ({ keyId: razorpayKeyId(), subscriptionId, name: distributor?.name ?? '', contact: phoneNumber(distributor?.phone) ? `+91${phoneNumber(distributor?.phone)}` : '' });
   const previous = await database().prepare('SELECT razorpay_id,checkout_url,status FROM app_subscriptions WHERE distributor_id=?').bind(owner).first<Subscription>();
-  if (previous?.razorpay_id) return Response.json({ status: previous.status, checkoutUrl: previous.checkout_url });
+  if (previous?.razorpay_id) return Response.json({ status: previous.status, checkoutUrl: previous.checkout_url, checkout: checkout(previous.razorpay_id) });
   // A pending marker prevents a double tap from creating two recurring mandates.
   const reserved = await database().prepare("INSERT INTO app_subscriptions (distributor_id,status,updated_at) VALUES (?,'creating',?) ON CONFLICT(distributor_id) DO UPDATE SET status='creating',updated_at=excluded.updated_at WHERE status='not_started' RETURNING distributor_id")
     .bind(owner, new Date().toISOString()).first();
@@ -44,5 +47,5 @@ export async function POST(request: Request) {
   }
   await database().prepare("UPDATE app_subscriptions SET razorpay_id=?,checkout_url=?,status='created',updated_at=? WHERE distributor_id=? AND status='creating'")
     .bind(result.id, result.short_url, new Date().toISOString(), owner).run();
-  return Response.json({ status: 'created', checkoutUrl: result.short_url });
+  return Response.json({ status: 'created', checkoutUrl: result.short_url, checkout: checkout(result.id) });
 }

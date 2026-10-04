@@ -6,7 +6,11 @@ type Subscription = { id?: string; status?: string; current_end?: number | null 
 export async function POST(request: Request) {
   const raw = await request.text();
   const signature = request.headers.get('x-razorpay-signature') ?? '';
-  if (!(await validWebhook(raw, signature))) return jsonError('Invalid signature.', 401);
+  if (!(await validWebhook(raw, signature))) {
+    // Shows in `wrangler tail` when the Razorpay webhook secret and RAZORPAY_WEBHOOK_SECRET differ.
+    console.error('razorpay webhook: invalid signature', request.headers.get('x-razorpay-event-id'));
+    return jsonError('Invalid signature.', 401);
+  }
   const eventId = request.headers.get('x-razorpay-event-id');
   if (!eventId || eventId.length > 120) return jsonError('Missing event ID.', 400);
   const payload = JSON.parse(raw) as { event?: string; payload?: { subscription?: { entity?: Subscription } } };

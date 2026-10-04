@@ -23,8 +23,8 @@ export async function razorpayRequest(path: string, init?: RequestInit): Promise
 }
 
 export async function validWebhook(body: string, signature: string): Promise<boolean> {
-  if (!env.RAZORPAY_WEBHOOK_SECRET || !/^[a-f0-9]{64}$/i.test(signature)) return false;
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(env.RAZORPAY_WEBHOOK_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+  if (!clean(env.RAZORPAY_WEBHOOK_SECRET) || !/^[a-f0-9]{64}$/i.test(signature)) return false;
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(clean(env.RAZORPAY_WEBHOOK_SECRET)), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
   const bytes = Uint8Array.from(signature.match(/.{2}/g) ?? [], hex => parseInt(hex, 16));
   return crypto.subtle.verify('HMAC', key, bytes, new TextEncoder().encode(body));
 }

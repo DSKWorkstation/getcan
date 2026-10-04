@@ -51,6 +51,7 @@ export const appDistributors = sqliteTable("app_distributors", {
   phone: text("phone").notNull().unique(),
   name: text("name").notNull().default("My distribution"),
   defaultPriceCents: integer("default_price_cents").notNull().default(3500),
+  upiId: text("upi_id").notNull().default(""),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -73,10 +74,12 @@ export const appCustomers = sqliteTable("app_customers", {
 }, (t) => [uniqueIndex("app_customers_distributor_phone").on(t.distributorId, t.phone)]);
 
 // Reshareable bearer links are private distributor data; never include in public lists.
+// `token` is empty once the link is sealed into `token_cipher` (see lib/links.ts).
 export const appCustomerLinks = sqliteTable("app_customer_links", {
  customerId: integer("customer_id").primaryKey().references(() => appCustomers.id),
  distributorId: integer("distributor_id").notNull().references(() => appDistributors.id),
  token: text("token").notNull(),
+ tokenCipher: text("token_cipher"),
  tokenHash: text("token_hash").notNull().unique(),
 });
 
@@ -95,6 +98,7 @@ export const appOrders = sqliteTable("app_orders", {
 }, (t) => [
   index("app_orders_distributor_created").on(t.distributorId, t.createdAt),
   index("app_orders_owner_customer_status").on(t.distributorId,t.customerId,t.status),
+  index("app_orders_owner_status").on(t.distributorId,t.status),
   uniqueIndex("app_orders_one_open_per_customer").on(t.customerId).where(sql`status <> 'delivered'`),
 ]);
 
@@ -146,3 +150,17 @@ export const appCanCollections = sqliteTable("app_can_collections", {
  receipt: text("receipt").notNull().unique(),
  createdAt: text("created_at").notNull(),
 },t=>[index("app_can_collections_owner_customer").on(t.distributorId,t.customerId)]);
+
+// Web Push endpoints. A distributor subscription hears about new requests; a
+// customer subscription hears about their own deliveries. The last message is
+// kept so the service worker can fetch it after a payload-free push.
+export const appPushSubscriptions = sqliteTable("app_push_subscriptions", {
+ endpoint: text("endpoint").primaryKey(),
+ kind: text("kind").notNull(),
+ distributorId: integer("distributor_id").notNull().references(()=>appDistributors.id),
+ customerId: integer("customer_id").references(()=>appCustomers.id),
+ lastTitle: text("last_title").notNull().default(""),
+ lastBody: text("last_body").notNull().default(""),
+ lastUrl: text("last_url").notNull().default(""),
+ createdAt: text("created_at").notNull(),
+},t=>[index("app_push_subscriptions_owner").on(t.distributorId,t.kind,t.customerId)]);

@@ -20,9 +20,14 @@ export async function POST(request: Request) {
   if (!owner) return jsonError('Sign in to subscribe.', 401);
   if (!razorpayReady()) return jsonError('Subscriptions are not configured yet.', 503);
   const planResponse = await razorpayRequest(`plans/${env.RAZORPAY_PLAN_ID}`);
-  const plan = await planResponse.json().catch(() => null) as { period?: string; interval?: number; item?: { amount?: number; currency?: string } } | null;
-  if (!planResponse.ok || plan?.period !== 'monthly' || plan.interval !== 1 || plan.item?.amount !== 5000 || plan.item.currency !== 'INR')
-    return jsonError('The Razorpay plan must be ₹50 per month.', 503);
+  const plan = await planResponse.json().catch(() => null) as { period?: string; interval?: number; item?: { amount?: number; currency?: string }; error?: { description?: string } } | null;
+  // Name the failing check so the owner can fix the Razorpay setup without guessing.
+  const mode = env.RAZORPAY_KEY_ID?.startsWith('rzp_live_') ? 'Live' : env.RAZORPAY_KEY_ID?.startsWith('rzp_test_') ? 'Test' : 'unknown-mode';
+  if (!planResponse.ok) console.error('razorpay plan fetch', planResponse.status, plan?.error?.description);
+  if (planResponse.status === 401) return jsonError(`Razorpay rejected the ${mode} API keys. Re-enter RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.`, 503);
+  if (!planResponse.ok) return jsonError(`Razorpay could not load plan ${env.RAZORPAY_PLAN_ID} with the ${mode} keys (${planResponse.status}: ${String(plan?.error?.description ?? 'no details').slice(0, 160)}). Check the plan ID and that the plan is in ${mode} mode.`, 503);
+  if (plan?.period !== 'monthly' || plan.interval !== 1 || plan.item?.amount !== 5000 || plan.item.currency !== 'INR')
+    return jsonError(`The Razorpay plan must be ₹50 every 1 month in INR. Plan ${env.RAZORPAY_PLAN_ID} is ${(plan?.item?.amount ?? 0) / 100} ${plan?.item?.currency ?? '?'} every ${plan?.interval ?? '?'} ${plan?.period ?? '?'}.`, 503);
   const previous = await database().prepare('SELECT razorpay_id,checkout_url,status FROM app_subscriptions WHERE distributor_id=?').bind(owner).first<Subscription>();
   if (previous?.razorpay_id) return Response.json({ status: previous.status, checkoutUrl: previous.checkout_url });
   // A pending marker prevents a double tap from creating two recurring mandates.

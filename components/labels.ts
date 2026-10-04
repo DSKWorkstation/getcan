@@ -1,4 +1,8 @@
-export type Language = 'en' | 'ta' | 'hi';
+import { southStrings } from '@/components/labels-te-kn';
+
+export type Language = 'en' | 'ta' | 'hi' | 'te' | 'kn';
+export const languages: Language[] = ['en', 'ta', 'hi', 'te', 'kn'];
+export const isLanguage = (value: unknown): value is Language => languages.includes(value as Language);
 const strings: Record<string, [string, string]> = {
  'Import customers':['வாடிக்கையாளர்களை இறக்குமதி செய்','ग्राहक आयात करें'], 'Invite customers':['வாடிக்கையாளர்களை அழை','ग्राहकों को आमंत्रित करें'], 'Collect empty cans':['காலி கேன்களைப் பெறு','खाली कैन लें'], 'Save collection':['பெற்றதை சேமி','संग्रह सहेजें'], 'Sales today':['இன்றைய விற்பனை','आज की बिक्री'], 'Collected today':['இன்றைய வசூல்','आज की वसूली'], 'Cans delivered':['வழங்கிய கேன்கள்','डिलीवर हुए कैन'], 'Empties collected':['பெற்ற காலி கேன்கள்','लौटे खाली कैन'], 'Total dues':['மொத்த நிலுவை','कुल बकाया'], 'Cans with customers':['வாடிக்கையாளரிடம் உள்ள கேன்கள்','ग्राहकों के पास कैन'], 'Dues and cans with customers include full history.':['நிலுவை மற்றும் கேன்கள் முழு வரலாற்றையும் உள்ளடக்கியது.','बकाया और कैन पूरे इतिहास से हैं।'], 'Share this public link with new customers.':['புதிய வாடிக்கையாளர்களுடன் இந்த இணைப்பைப் பகிரவும்.','नए ग्राहकों को यह लिंक भेजें।'], 'Credit':['முன்பணம்','जमा'], 'Due':['நிலுவை','बकाया'],
 
@@ -97,4 +101,9 @@ const strings: Record<string, [string, string]> = {
  'Good evening':['மாலை வணக்கம்','शुभ संध्या'],
  'Save settings':['அமைப்புகளைச் சேமி','सेटिंग्स सहेजें'],
 };
-export function tx(lang: Language, english: string): string { return lang === 'en' ? english : strings[english]?.[lang === 'ta' ? 0 : 1] ?? english; }
+// Tamil and Hindi live in `strings`; Telugu and Kannada in labels-te-kn.ts, both as [first, second].
+export function tx(lang: Language, english: string): string {
+  if (lang === 'en') return english;
+  const pair = lang === 'te' || lang === 'kn' ? southStrings[english] : strings[english];
+  return pair?.[lang === 'ta' || lang === 'te' ? 0 : 1] ?? english;
+}

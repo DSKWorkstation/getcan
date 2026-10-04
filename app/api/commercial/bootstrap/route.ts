@@ -2,17 +2,21 @@ import {ledger} from '@/lib/ledger';
 import {sealLegacyLinks} from '@/lib/links';
 import {pushPublicKey} from '@/lib/push';
 import { database, distributorId, jsonError } from '@/lib/commercial';
+import { syncSubscription } from '@/lib/razorpay';
 export async function GET(request: Request) {
  const owner=await distributorId(request);
  if(!owner)return jsonError('Sign in to open your desk.',401);
  const db=database(),now=new Date().toISOString();
- const [distributor,subscription]=await Promise.all([
+ const [distributor,storedSubscription]=await Promise.all([
   db.prepare('SELECT name,default_price_cents,upi_id,onboarded_at,created_at FROM app_distributors WHERE id=?').bind(owner).first<{name:string;default_price_cents:number;upi_id:string;onboarded_at:string|null;created_at:string}>(),
   db.prepare('SELECT status,current_end_at,checkout_url FROM app_subscriptions WHERE distributor_id=?').bind(owner).first<{status:string;current_end_at:string|null;checkout_url:string|null}>()
  ]);
  if(!distributor)return jsonError('Sign in to open your desk.',401);
  const trialEnd=new Date(Date.parse(distributor.created_at)+60*86400000).toISOString();
- const trial=trialEnd>now,subActive=subscription?.status==='active'&&(!subscription.current_end_at||subscription.current_end_at>now);
+ let subscription=storedSubscription;
+ const active=(s:{status:string;current_end_at:string|null}|null)=>s?.status==='active'&&(!s.current_end_at||s.current_end_at>now);
+ if(trialEnd<=now&&subscription&&!active(subscription)){const synced=await syncSubscription(owner);if(synced)subscription={...subscription,...synced};}
+ const trial=trialEnd>now,subActive=active(subscription);
  const billing={status:trial||subActive?'active':subscription?.status??'not_started',trialEnd:trial?trialEnd:null,currentEndAt:trial?trialEnd:subscription?.current_end_at??null,checkoutUrl:trial?null:subscription?.checkout_url??null};
  const headers={'Cache-Control':'no-store','Vary':'Cookie'};
  if(!trial&&!subActive)return Response.json({billing},{headers});

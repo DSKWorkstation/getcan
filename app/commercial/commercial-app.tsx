@@ -4,7 +4,7 @@ import CustomerImport from '@/components/customer-import';
 import InstallApp, { useInstallPrompt } from '@/components/install-app';
 import LanguageSelect from '@/components/language-select';
 import QuickOrder from '@/components/quick-order';
-import { tx, type Language } from '@/components/labels';
+import { isLanguage, tx, type Language } from '@/components/labels';
 import { chime, enablePush, pushEnabled, pushSupported } from '@/components/push-alerts';
 import Statement from '@/components/statement';
 import { clearOffline, flushOutbox, isNetworkError, outboxSize, queueRequest, queuedDeliveries, readSnapshot, saveSnapshot } from '@/components/offline';
@@ -27,7 +27,7 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 }
 const post = (body: unknown): RequestInit => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 const DEFAULT_NAME = 'My distribution';
-const locale = (lang: Language) => lang === 'ta' ? 'ta-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN';
+const locale = (lang: Language) => `${lang}-IN`;
 function greeting() { const hour = new Date().getHours(); return hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'; }
 
 function loadRazorpay(): Promise<boolean> {
@@ -116,7 +116,7 @@ export default function CommercialApp({ turnstileSiteKey }: { turnstileSiteKey: 
       setAccounts(data.balances??[]);setSummary(data.summary??null);setCustomers(data.customers??[]);setOrders(data.orders??[]);setPayments(data.payments??[]);if(data.settings)setSettings(data.settings);setPhase('desk');setError(problems.join(' '));
     } catch (e) { if (e instanceof Error && e.message.includes('Sign in')) setPhase('phone'); else { setError(e instanceof Error ? e.message : 'Could not load your desk.'); setPhase('phone'); } }
   }, []);
-  useEffect(() => { void refresh(); const value = localStorage.getItem('getcan-language'); if (value === 'ta' || value === 'hi') setLang(value); }, [refresh]);
+  useEffect(() => { void refresh(); const value = localStorage.getItem('getcan-language'); if (isLanguage(value) && value !== 'en') setLang(value); }, [refresh]);
   useEffect(() => {
     if (phase !== 'desk') return;
     // Keep the desk current so new requests are heard while the app is open.

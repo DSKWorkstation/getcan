@@ -4,7 +4,7 @@ import { Bell, BellRing, Check, Minus, Plus, Truck, Wallet, X } from 'lucide-rea
 import Image from 'next/image';
 import InstallApp from '@/components/install-app';
 import LanguageSelect from '@/components/language-select';
-import { tx, type Language } from '@/components/labels';
+import { isLanguage, languages, tx, type Language } from '@/components/labels';
 import { enablePush, pushEnabled, pushSupported } from '@/components/push-alerts';
 import UpiPay from '@/components/upi-pay';
 
@@ -23,10 +23,10 @@ const rupees = (cents: number) => `₹${(cents / 100).toLocaleString('en-IN')}`;
 function initialLanguage(): Language {
   try {
     const saved = localStorage.getItem('getcan-language');
-    if (saved === 'en' || saved === 'ta' || saved === 'hi') return saved;
+    if (isLanguage(saved)) return saved;
   } catch { /* storage can be unavailable */ }
   const browser = typeof navigator === 'undefined' ? '' : navigator.language.toLowerCase();
-  return browser.startsWith('ta') ? 'ta' : browser.startsWith('hi') ? 'hi' : 'en';
+  return languages.find(l => browser.startsWith(l)) ?? 'en';
 }
 
 export default function CustomerRequest({ token }: { token: string }) {

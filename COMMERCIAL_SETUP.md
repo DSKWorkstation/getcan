@@ -34,6 +34,12 @@ What each feature does:
 - **Offline.** The desk opens from the last saved copy when there is no signal. Deliveries and empty-can pickups made offline are sent automatically when the connection returns; anything the server rejects is shown.
 - **Statements and reminders.** Ledger has a monthly statement per customer (WhatsApp or print). May need water soon has a Remind button that opens a WhatsApp draft with the customer's order link. Payments can be recorded as cash or UPI.
 
+## First sign-in and home screen (added October 2026)
+
+Apply `drizzle/0011_bent_loki.sql` to the production D1 database (`npx wrangler d1 execute getcan-db --remote --file drizzle/0011_bent_loki.sql`). It adds `onboarded_at` to distributors and marks anyone who already renamed their business as set up.
+
+A distributor signing in for the first time answers two questions on separate screens (business name, then price per can), then is offered to install the app to the home screen with a Skip option. The home screen shows one action, Take a new order, with new requests and customers who may need water below it. Sign out and Install GetCan are in Settings. The language menu lists Tamil and Hindi first while the app is in English, and English first otherwise.
+
 ## Tests
 
 `npm test` runs the route handlers against an in-memory SQLite copy of the D1 schema (all migrations applied) with MSG91, Turnstile, Razorpay and push services mocked. It covers sign-in, orders and the customer page, links, the Razorpay webhook and billing, and alerts.

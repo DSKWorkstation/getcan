@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Bell, BellRing, Check, Minus, Plus, Truck, Wallet, X } from 'lucide-react';
 import Image from 'next/image';
 import InstallApp from '@/components/install-app';
+import LanguageSelect from '@/components/language-select';
 import { tx, type Language } from '@/components/labels';
 import { enablePush, pushEnabled, pushSupported } from '@/components/push-alerts';
 
@@ -108,7 +109,7 @@ export default function CustomerRequest({ token }: { token: string }) {
   const cans = (n: number) => `${n} ${t(n === 1 ? 'can' : 'cans')}`;
 
   return <main className="gc-app gc-customer"><header className="gc-header"><span className="gc-brand"><img src="/watercan.png" width="36" height="36" alt=""/> getcan<span>.</span></span>
-    <div className="gc-customer-head-actions"><select aria-label={t('Language')} value={lang} onChange={e => chooseLanguage(e.target.value as Language)}><option value="en">English</option><option value="ta">தமிழ்</option><option value="hi">हिन्दी</option></select><InstallApp start={`/c/${token}`} visible={!!data}/></div></header>
+    <div className="gc-customer-head-actions"><LanguageSelect label={t('Language')} value={lang} onChange={chooseLanguage}/><InstallApp start={`/c/${token}`} visible={!!data}/></div></header>
     <section className="gc-order-screen"><div className="gc-order-head"><span className="gc-eyebrow">{data?.distributor.name ?? 'GETCAN'}</span><h1>{data ? t('Order water cans') : t('Opening your order…')}</h1></div>
       {notice && <div className="gc-notice" role="status"><Check size={19}/> {t(notice)}<button onClick={() => setNotice('')} aria-label="Dismiss">×</button></div>}
       {error && <div className="gc-alert" role="alert">{error}</div>}

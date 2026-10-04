@@ -52,6 +52,7 @@ export const appDistributors = sqliteTable("app_distributors", {
   name: text("name").notNull().default("My distribution"),
   defaultPriceCents: integer("default_price_cents").notNull().default(3500),
   upiId: text("upi_id").notNull().default(""),
+  onboardedAt: text("onboarded_at"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });

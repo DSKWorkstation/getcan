@@ -85,6 +85,13 @@
       "when": 1791120253801,
       "tag": "0011_bent_loki",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1792340866049,
+      "tag": "0012_narrow_zeigeist",
+      "breakpoints": true
     }
   ]
 }

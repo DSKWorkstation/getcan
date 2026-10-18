@@ -56,12 +56,19 @@ export const positiveInt = (value: unknown, max: number): number | null => {
   return Number.isInteger(number) && number > 0 && number <= max ? number : null;
 };
 
-export type LinkedCustomer = { id: number; distributor_id: number; name: string; address: string; usual_quantity: number };
+// What one can costs a customer (alias `c`) of a distributor (alias `d`): their
+// price group's rate if they are in one, otherwise the distributor's default.
+export const customerPriceSql = 'COALESCE((SELECT g.price_cents FROM app_price_groups g WHERE g.id=c.price_group_id AND g.distributor_id=c.distributor_id),d.default_price_cents)';
+
+/** Re-price a distributor's undelivered orders after a group or a customer's group changes. Delivered orders keep what was charged. */
+export const repriceOpenOrders = (owner: number) => database().prepare(`UPDATE app_orders SET price_cents=(SELECT ${customerPriceSql} FROM app_customers c JOIN app_distributors d ON d.id=c.distributor_id WHERE c.id=app_orders.customer_id) WHERE distributor_id=? AND status<>'delivered'`).bind(owner);
+
+export type LinkedCustomer = { id: number; distributor_id: number; name: string; address: string; usual_quantity: number; /** Their price group's rate, or null for the default price. */ price_cents: number | null };
 
 /** The customer a personal request link belongs to, or null for an unknown or revoked link. */
 export async function customerByToken(token: unknown): Promise<LinkedCustomer | null> {
   if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) return null;
   const hash = await sha256(token);
-  return database().prepare('SELECT id,distributor_id,name,address,usual_quantity FROM app_customers WHERE request_token_hash=? OR id IN (SELECT customer_id FROM app_customer_links WHERE token_hash=?)')
+  return database().prepare('SELECT id,distributor_id,name,address,usual_quantity,(SELECT g.price_cents FROM app_price_groups g WHERE g.id=price_group_id AND g.distributor_id=app_customers.distributor_id) AS price_cents FROM app_customers WHERE request_token_hash=? OR id IN (SELECT customer_id FROM app_customer_links WHERE token_hash=?)')
     .bind(hash, hash).first<LinkedCustomer>();
 }

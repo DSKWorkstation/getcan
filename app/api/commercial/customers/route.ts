@@ -1,10 +1,10 @@
-import { activeDistributorId, database, jsonError, phoneNumber, positiveInt, randomToken, sha256 } from '@/lib/commercial';
+import { activeDistributorId, database, jsonError, phoneNumber, positiveInt, randomToken, repriceOpenOrders, sha256 } from '@/lib/commercial';
 import { saveLink } from '@/lib/links';
 
 export async function GET(request: Request) {
   const owner = await activeDistributorId(request);
   if (!owner) return jsonError('Sign in to view your customers.', 401);
-  const rows = await database().prepare('SELECT id,name,phone,address,area,usual_quantity,frequency_days,last_delivered_at,created_at,updated_at FROM app_customers WHERE distributor_id=? ORDER BY updated_at DESC LIMIT 500').bind(owner).all();
+  const rows = await database().prepare('SELECT id,name,phone,address,area,usual_quantity,frequency_days,price_group_id,last_delivered_at,created_at,updated_at FROM app_customers WHERE distributor_id=? ORDER BY updated_at DESC LIMIT 500').bind(owner).all();
   return Response.json({ customers: rows.results });
 }
 
@@ -49,9 +49,17 @@ export async function PATCH(request: Request) {
   const quantity = positiveInt(body?.usualQuantity ?? current.usual_quantity, 50);
   const frequency = positiveInt(body?.frequencyDays ?? current.frequency_days, 90);
   if (!phone || !name || !quantity || !frequency) return jsonError('Check the customer details.', 400);
+  // null or '' moves the customer back to the usual price.
+  const group = body?.priceGroupId === undefined ? current.price_group_id as number | null : body.priceGroupId === null || body.priceGroupId === '' ? null : positiveInt(body.priceGroupId, 2147483647);
+  if (group === undefined || (body?.priceGroupId && !group)) return jsonError('Choose a price group.', 400);
+  if (group && !await database().prepare('SELECT 1 FROM app_price_groups WHERE id=? AND distributor_id=?').bind(group, owner).first()) return jsonError('Price group not found.', 404);
+  const db = database();
   try {
-    await database().prepare('UPDATE app_customers SET name=?,phone=?,address=?,area=?,usual_quantity=?,frequency_days=?,updated_at=? WHERE id=? AND distributor_id=?')
-      .bind(name, phone, address, area, quantity, frequency, new Date().toISOString(), id, owner).run();
+    await db.batch([
+      db.prepare('UPDATE app_customers SET name=?,phone=?,address=?,area=?,usual_quantity=?,frequency_days=?,price_group_id=?,updated_at=? WHERE id=? AND distributor_id=?')
+        .bind(name, phone, address, area, quantity, frequency, group, new Date().toISOString(), id, owner),
+      repriceOpenOrders(owner),
+    ]);
     return Response.json({ ok: true });
   } catch (error) {
     if (String(error).includes('UNIQUE')) return jsonError('This phone is already in your customer list.', 409);

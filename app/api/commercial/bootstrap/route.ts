@@ -22,11 +22,12 @@ export async function GET(request: Request) {
  if(!trial&&!subActive)return Response.json({billing},{headers});
 
  await sealLegacyLinks(owner).catch(error=>console.error('Could not seal customer links',error));
- const [customers,orders,payments,accounts]=await Promise.all([
-  db.prepare('SELECT id,name,phone,address,area,usual_quantity,frequency_days,last_delivered_at FROM app_customers WHERE distributor_id=? ORDER BY updated_at DESC LIMIT 500').bind(owner).all(),
+ const [customers,orders,payments,accounts,priceGroups]=await Promise.all([
+  db.prepare('SELECT id,name,phone,address,area,usual_quantity,frequency_days,price_group_id,last_delivered_at FROM app_customers WHERE distributor_id=? ORDER BY updated_at DESC LIMIT 500').bind(owner).all(),
   db.prepare('SELECT o.*,c.name AS customer,c.phone,c.address,c.area FROM app_orders o JOIN app_customers c ON c.id=o.customer_id AND c.distributor_id=o.distributor_id WHERE o.distributor_id=? ORDER BY o.id DESC LIMIT 500').bind(owner).all(),
   db.prepare('SELECT id,customer_id,amount_cents FROM app_payments WHERE distributor_id=? ORDER BY id DESC LIMIT 500').bind(owner).all(),
-  ledger(owner)
+  ledger(owner),
+  db.prepare('SELECT id,name,price_cents FROM app_price_groups WHERE distributor_id=? ORDER BY price_cents DESC,id').bind(owner).all()
  ]);
- return Response.json({billing,settings:{name:distributor.name,default_price_cents:distributor.default_price_cents,upi_id:distributor.upi_id,onboarded:!!distributor.onboarded_at},pushKey:pushPublicKey(),customers:customers.results,orders:orders.results,payments:payments.results,...accounts},{headers});
+ return Response.json({billing,settings:{name:distributor.name,default_price_cents:distributor.default_price_cents,upi_id:distributor.upi_id,onboarded:!!distributor.onboarded_at},pushKey:pushPublicKey(),customers:customers.results,priceGroups:priceGroups.results,orders:orders.results,payments:payments.results,...accounts},{headers});
 }

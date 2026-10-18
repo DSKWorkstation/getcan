@@ -57,6 +57,14 @@ export const appDistributors = sqliteTable("app_distributors", {
   updatedAt: text("updated_at").notNull(),
 });
 
+export const appPriceGroups = sqliteTable("app_price_groups", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  distributorId: integer("distributor_id").notNull().references(() => appDistributors.id),
+  name: text("name").notNull(),
+  priceCents: integer("price_cents").notNull(),
+  createdAt: text("created_at").notNull(),
+}, (t) => [index("app_price_groups_distributor").on(t.distributorId)]);
+
 export const appCustomers = sqliteTable("app_customers", {
   area: text("area").notNull().default(""),
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -67,6 +75,9 @@ export const appCustomers = sqliteTable("app_customers", {
   usualQuantity: integer("usual_quantity").notNull().default(2),
   frequencyDays: integer("frequency_days").notNull().default(7),
   lastDeliveredAt: text("last_delivered_at"),
+  // Customers in a price group (e.g. offices buying in bulk) pay that group's
+  // rate. Null means the distributor's default price applies.
+  priceGroupId: integer("price_group_id").references(() => appPriceGroups.id),
   // A random token is shown in the customer's personal request link. Only its
   // SHA-256 digest is stored, so a database read cannot expose live links.
   requestTokenHash: text("request_token_hash").notNull().unique(),

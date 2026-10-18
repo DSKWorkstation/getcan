@@ -127,3 +127,5 @@ label.delivery-search{display:flex!important;flex-direction:row;align-items:cent
 .gc-ledger-actions{display:flex;flex-wrap:wrap;gap:8px}.gc-ledger-actions button{flex:1 1 auto;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;background:#e7f5f7;color:#10748a;padding:10px 12px;font-weight:800;cursor:pointer;white-space:nowrap}.gc-ledger-actions button:disabled{opacity:.45;cursor:default}
 @media(min-width:900px){.gc-ledger-row{grid-template-columns:1fr auto;align-items:center}.gc-ledger-actions{flex-wrap:nowrap}.gc-ledger-actions button{flex:none}}
 @media(max-width:760px){.gc-panel{padding:18px}.gc-title .gc-eyebrow{font-size:12px}}
+.quick-phone input{border:0!important;box-shadow:none!important;outline:0!important;background:none!important;padding:0!important;margin:0!important}.quick-phone:focus-within{box-shadow:0 0 0 4px #0a829622}
+.gc-eyebrow{letter-spacing:.6px}

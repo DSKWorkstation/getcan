@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, ContactRound, Minus, Plus, Search, X } from 'lucide-react';
 import type { Language } from '@/components/labels';
 
-type Person = { id: number; name: string; phone: string; address?: string; area?: string; usual_quantity: number };
+type Person = { id: number; name: string; phone: string; address?: string; area?: string; usual_quantity: number; price_cents?: number | null };
 type Result = { id: number; newCustomer: boolean; requestLink?: string | null };
 type Props = { endpoint: string; lookupEndpoint?: string; people: Person[]; priceCents: number; onDone: (result: Result, phone: string) => Promise<void> | void; onClose: () => void; initialPhone?: string; lang?: Language; saveOnly?: boolean };
 const copy = {
@@ -84,6 +84,6 @@ export default function QuickOrder({ endpoint, lookupEndpoint = endpoint, people
     {valid && <><div className="quick-person"><span className="quick-person-icon">{person ? <Check size={20}/> : <Plus size={20}/>}</span><span><strong>{checking ? '…' : person?.name ?? (name || t.new)}</strong><small>{person ? `${t.found} · ${t.saved}: ${person.usual_quantity}` : t.new}</small></span></div>{!person && !checking && <div className="quick-optional"><label>{t.name}<input value={name} onChange={e => setName(e.target.value)} autoComplete="name"/></label><label>{lang === 'ta' ? 'பகுதி (விருப்பம்)' : lang === 'hi' ? 'इलाका (वैकल्पिक)' : lang === 'te' ? 'ఏరియా (ఐచ్ఛికం)' : lang === 'kn' ? 'ಏರಿಯಾ (ಐಚ್ಛಿಕ)' : 'Area (optional)'}<input value={area} onChange={e => setArea(e.target.value)}/></label><label>{t.address}<input value={address} onChange={e => setAddress(e.target.value)} autoComplete="street-address"/></label></div>}</>}
     <div className="quick-qty"><span>{t.cans}</span><div><button disabled={quantity <= 1} onClick={() => { setEdited(true); setQuantity(q => q - 1); }} aria-label="Minus one can"><Minus size={21}/></button><strong>{quantity}</strong><button disabled={quantity >= 50} onClick={() => { setEdited(true); setQuantity(q => q + 1); }} aria-label="Plus one can"><Plus size={21}/></button></div></div>
     {error && <p className="quick-error" role="alert">{error}</p>}
-  </div><footer>{!saveOnly && <span>{t.total}<strong>₹{(quantity * priceCents / 100).toLocaleString('en-IN')}</strong></span>}<button disabled={!valid || busy || checking || (saveOnly && !!person)} onClick={submit}>{busy ? t.sending : saveOnly ? (lang === 'ta' ? 'வாடிக்கையாளரைச் சேர்' : lang === 'hi' ? 'ग्राहक जोड़ें' : lang === 'te' ? 'కస్టమర్‌ను జోడించండి' : lang === 'kn' ? 'ಗ್ರಾಹಕರನ್ನು ಸೇರಿಸಿ' : 'Add customer') : t.place}</button></footer></section></div>;
+  </div><footer>{!saveOnly && <span>{t.total}<strong>₹{(quantity * (person?.price_cents ?? priceCents) / 100).toLocaleString('en-IN')}</strong></span>}<button disabled={!valid || busy || checking || (saveOnly && !!person)} onClick={submit}>{busy ? t.sending : saveOnly ? (lang === 'ta' ? 'வாடிக்கையாளரைச் சேர்' : lang === 'hi' ? 'ग्राहक जोड़ें' : lang === 'te' ? 'కస్టమర్‌ను జోడించండి' : lang === 'kn' ? 'ಗ್ರಾಹಕರನ್ನು ಸೇರಿಸಿ' : 'Add customer') : t.place}</button></footer></section></div>;
 }
 function navigatorHasContacts() { return typeof navigator !== 'undefined' && typeof (navigator as Navigator & { contacts?: { select?: unknown } }).contacts?.select === 'function'; }

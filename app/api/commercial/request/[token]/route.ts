@@ -21,8 +21,9 @@ export async function GET(_request: Request, context: Context) {
   const customer = await openCustomer(context);
   if (customer instanceof Response) return customer;
   const owner = customer.distributor_id;
+  // Customers in a price group see and pay that group's rate.
   const [distributor, orders, account] = await Promise.all([
-    database().prepare('SELECT name,default_price_cents,upi_id FROM app_distributors WHERE id=?').bind(owner).first(),
+    database().prepare('SELECT name,COALESCE(?,default_price_cents) AS default_price_cents,upi_id FROM app_distributors WHERE id=?').bind(customer.price_cents, owner).first(),
     database().prepare('SELECT id,quantity,price_cents,status,created_at FROM app_orders WHERE distributor_id=? AND customer_id=? ORDER BY id DESC LIMIT 10').bind(owner, customer.id).all(),
     database().prepare(`SELECT
       COALESCE((SELECT SUM(quantity*price_cents) FROM app_orders WHERE customer_id=?1 AND distributor_id=?2 AND status='delivered'),0)-COALESCE((SELECT SUM(amount_cents) FROM app_payments WHERE customer_id=?1 AND distributor_id=?2),0) AS balance_cents,
@@ -46,7 +47,7 @@ export async function POST(request: Request, context: Context) {
   const open = await database().prepare("SELECT id FROM app_orders WHERE distributor_id=? AND customer_id=? AND status!='delivered' LIMIT 1")
     .bind(customer.distributor_id, customer.id).first();
   if (open) return jsonError('A request is already open. Your distributor can see it.', 409);
-  const settings = await database().prepare('SELECT default_price_cents FROM app_distributors WHERE id=?').bind(customer.distributor_id).first<{ default_price_cents: number }>();
+  const settings = await database().prepare('SELECT COALESCE(?,default_price_cents) AS default_price_cents FROM app_distributors WHERE id=?').bind(customer.price_cents, customer.distributor_id).first<{ default_price_cents: number }>();
   const now = new Date().toISOString();
   try {
     const row = await database().prepare("INSERT INTO app_orders (distributor_id,customer_id,quantity,price_cents,status,source,created_at,updated_at) VALUES (?,?,?,?,'requested','customer',?,?) RETURNING id")

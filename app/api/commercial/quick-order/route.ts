@@ -1,4 +1,4 @@
-import { activeDistributorId, database, jsonError, phoneNumber, positiveInt, randomToken, sha256 } from '@/lib/commercial';
+import { activeDistributorId, customerPriceSql, database, jsonError, phoneNumber, positiveInt, randomToken, sha256 } from '@/lib/commercial';
 import { customerLink } from '@/lib/links';
 
 export async function GET(request: Request) {
@@ -7,12 +7,12 @@ export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const query = params.get('query')?.trim().slice(0, 80);
   if (query && query.length >= 2) {
-    const matches = await database().prepare('SELECT id,name,phone,address,area,usual_quantity FROM app_customers WHERE distributor_id=? AND (instr(lower(name),lower(?))>0 OR instr(phone,?)>0) ORDER BY updated_at DESC LIMIT 12').bind(owner, query, query).all();
+    const matches = await database().prepare('SELECT id,name,phone,address,area,usual_quantity,price_group_id,(SELECT g.price_cents FROM app_price_groups g WHERE g.id=price_group_id AND g.distributor_id=app_customers.distributor_id) AS price_cents FROM app_customers WHERE distributor_id=? AND (instr(lower(name),lower(?))>0 OR instr(phone,?)>0) ORDER BY updated_at DESC LIMIT 12').bind(owner, query, query).all();
     return Response.json({ suggestions: matches.results });
   }
   const phone = phoneNumber(params.get('phone'));
   if (!phone) return jsonError('Enter a 10-digit mobile number.', 400);
-  const customer = await database().prepare('SELECT id,name,phone,address,area,usual_quantity FROM app_customers WHERE distributor_id=? AND phone=?').bind(owner, phone).first();
+  const customer = await database().prepare('SELECT id,name,phone,address,area,usual_quantity,price_group_id,(SELECT g.price_cents FROM app_price_groups g WHERE g.id=price_group_id AND g.distributor_id=app_customers.distributor_id) AS price_cents FROM app_customers WHERE distributor_id=? AND phone=?').bind(owner, phone).first();
   return Response.json({ customer });
 }
 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const [created, order] = await db.batch([
       db.prepare('INSERT OR IGNORE INTO app_customers (distributor_id,name,phone,address,area,usual_quantity,frequency_days,request_token_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,7,?,?,?)')
         .bind(owner, name, phone, address, area, quantity, await sha256(randomToken()), now, now),
-      db.prepare("INSERT INTO app_orders (distributor_id,customer_id,quantity,price_cents,status,source,created_at,updated_at) SELECT ?,c.id,?,d.default_price_cents,'requested','distributor',?,? FROM app_customers c JOIN app_distributors d ON d.id=c.distributor_id WHERE c.distributor_id=? AND c.phone=? RETURNING id,customer_id")
+      db.prepare(`INSERT INTO app_orders (distributor_id,customer_id,quantity,price_cents,status,source,created_at,updated_at) SELECT ?,c.id,?,${customerPriceSql},'requested','distributor',?,? FROM app_customers c JOIN app_distributors d ON d.id=c.distributor_id WHERE c.distributor_id=? AND c.phone=? RETURNING id,customer_id`)
         .bind(owner, quantity, now, now, owner, phone),
     ]);
     const row = order.results?.[0] as { id: number; customer_id: number } | undefined;

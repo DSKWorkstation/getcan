@@ -1,4 +1,4 @@
-import { activeDistributorId, database, jsonError, positiveInt } from '@/lib/commercial';
+import { activeDistributorId, customerPriceSql, database, jsonError, positiveInt } from '@/lib/commercial';
 import { customerUpdate } from '@/lib/order-alerts';
 
 const stages = ['requested', 'accepted', 'out_for_delivery', 'delivered'] as const;
@@ -18,12 +18,11 @@ export async function POST(request: Request) {
   const customerId = positiveInt(body?.customerId, 2147483647);
   const quantity = positiveInt(body?.quantity, 50);
   if (!customerId || !quantity) return jsonError('Choose a customer and 1–50 cans.', 400);
-  const customer = await database().prepare('SELECT id FROM app_customers WHERE id=? AND distributor_id=?').bind(customerId, owner).first();
+  const customer = await database().prepare(`SELECT c.id,${customerPriceSql} AS price_cents FROM app_customers c JOIN app_distributors d ON d.id=c.distributor_id WHERE c.id=? AND c.distributor_id=?`).bind(customerId, owner).first<{ id: number; price_cents: number }>();
   if (!customer) return jsonError('Customer not found.', 404);
-  const distributor = await database().prepare('SELECT default_price_cents FROM app_distributors WHERE id=?').bind(owner).first<{ default_price_cents: number }>();
   const now = new Date().toISOString();
   const row = await database().prepare("INSERT INTO app_orders (distributor_id,customer_id,quantity,price_cents,status,source,created_at,updated_at) VALUES (?,?,?,?,'requested','distributor',?,?) RETURNING id")
-    .bind(owner, customerId, quantity, distributor?.default_price_cents ?? 3500, now, now).first<{ id: number }>();
+    .bind(owner, customerId, quantity, customer.price_cents, now, now).first<{ id: number }>();
   return Response.json({ id: row?.id }, { status: 201 });
 }
 

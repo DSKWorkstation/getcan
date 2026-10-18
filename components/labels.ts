@@ -100,6 +100,20 @@ const strings: Record<string, [string, string]> = {
  'Good afternoon':['மதிய வணக்கம்','नमस्कार'],
  'Good evening':['மாலை வணக்கம்','शुभ संध्या'],
  'Save settings':['அமைப்புகளைச் சேமி','सेटिंग्स सहेजें'],
+ 'Price per can':['ஒரு கேன் விலை','प्रति कैन दाम'],
+ 'Usual price':['வழக்கமான விலை','सामान्य दाम'],
+ 'Price groups':['விலைக் குழுக்கள்','दाम समूह'],
+ 'Add price groups like Office or Shop in Settings.':['அலுவலகம், கடை போன்ற விலைக் குழுக்களை அமைப்புகளில் சேர்க்கவும்.','ऑफिस या दुकान जैसे दाम समूह सेटिंग्स में जोड़ें।'],
+ 'Your usual price. Delivered orders keep the price they were charged.':['உங்கள் வழக்கமான விலை. வழங்கிய ஆர்டர்களின் விலை மாறாது.','आपका सामान्य दाम। डिलीवर हुए ऑर्डर का दाम नहीं बदलता।'],
+ 'Charge some customers a different rate, like offices that buy more. Choose the group when you edit a customer.':['அதிகம் வாங்கும் அலுவலகங்கள் போன்றவர்களுக்கு வேறு விலை வைக்கலாம். வாடிக்கையாளரை மாற்றும்போது குழுவைத் தேர்ந்தெடுக்கவும்.','ज़्यादा खरीदने वाले ऑफिस जैसे ग्राहकों के लिए अलग दाम रखें। ग्राहक बदलते समय समूह चुनें।'],
+ 'Group name':['குழுவின் பெயர்','समूह का नाम'],
+ 'e.g. Office':['எ.கா. அலுவலகம்','जैसे ऑफिस'],
+ 'Enter a group name and a price between ₹1 and ₹1000.':['குழுவின் பெயரும் ₹1 முதல் ₹1000 வரை விலையும் உள்ளிடவும்.','समूह का नाम और ₹1 से ₹1000 के बीच दाम डालें।'],
+ 'Remove price group':['விலைக் குழுவை நீக்கவா','दाम समूह हटाएँ'],
+ 'Its customers go back to your usual price.':['அதன் வாடிக்கையாளர்கள் வழக்கமான விலைக்குத் திரும்புவார்கள்.','इसके ग्राहक सामान्य दाम पर लौट आएँगे।'],
+ 'Remove':['நீக்கு','हटाएँ'],
+ 'Save':['சேமி','सहेजें'],
+ 'Add':['சேர்','जोड़ें'],
 };
 // Tamil and Hindi live in `strings`; Telugu and Kannada in labels-te-kn.ts, both as [first, second].
 export function tx(lang: Language, english: string): string {

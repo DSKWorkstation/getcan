@@ -4,7 +4,7 @@ import CustomerImport from '@/components/customer-import';
 import InstallApp, { useInstallPrompt } from '@/components/install-app';
 import LanguageSelect from '@/components/language-select';
 import QuickOrder from '@/components/quick-order';
-import { isLanguage, tx, type Language } from '@/components/labels';
+import { isLanguage, languages, tx, type Language } from '@/components/labels';
 import { chime, enablePush, pushEnabled, pushSupported } from '@/components/push-alerts';
 import Statement from '@/components/statement';
 import { clearOffline, flushOutbox, isNetworkError, outboxSize, queueRequest, queuedDeliveries, readSnapshot, saveSnapshot } from '@/components/offline';
@@ -116,7 +116,7 @@ export default function CommercialApp({ turnstileSiteKey }: { turnstileSiteKey: 
       setAccounts(data.balances??[]);setSummary(data.summary??null);setCustomers(data.customers??[]);setOrders(data.orders??[]);setPayments(data.payments??[]);if(data.settings)setSettings(data.settings);setPhase('desk');setError(problems.join(' '));
     } catch (e) { if (e instanceof Error && e.message.includes('Sign in')) setPhase('phone'); else { setError(e instanceof Error ? e.message : 'Could not load your desk.'); setPhase('phone'); } }
   }, []);
-  useEffect(() => { void refresh(); const value = localStorage.getItem('getcan-language'); if (isLanguage(value) && value !== 'en') setLang(value); }, [refresh]);
+  useEffect(() => { void refresh(); const value = localStorage.getItem('getcan-language'); const browser = navigator.language.toLowerCase(); const chosen = isLanguage(value) ? value : languages.find(l => browser.startsWith(l)); if (chosen && chosen !== 'en') setLang(chosen); }, [refresh]);
   useEffect(() => {
     if (phase !== 'desk') return;
     // Keep the desk current so new requests are heard while the app is open.

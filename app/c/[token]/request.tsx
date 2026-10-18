@@ -108,7 +108,7 @@ export default function CustomerRequest({ token }: { token: string }) {
   const recent = data?.orders.filter(o => o.status === 'delivered').slice(0, 5) ?? [];
   const cans = (n: number) => `${n} ${t(n === 1 ? 'can' : 'cans')}`;
 
-  return <main className="gc-app gc-customer"><header className="gc-header"><span className="gc-brand"><img src="/watercan.png" width="36" height="36" alt=""/> getcan<span>.</span></span>
+  return <main className="gc-app gc-customer"><header className="gc-header"><span className="gc-brand"><img src="/logo-can.png" width="36" height="36" alt=""/><span className="gc-wordmark">getcan<em>.</em></span></span>
     <div className="gc-customer-head-actions"><LanguageSelect label={t('Language')} value={lang} onChange={chooseLanguage}/><InstallApp start={`/c/${token}`} visible={!!data}/></div></header>
     <section className="gc-order-screen"><div className="gc-order-head"><span className="gc-eyebrow">{data?.distributor.name ?? 'GETCAN'}</span><h1>{data ? t('Order water cans') : t('Opening your order…')}</h1></div>
       {notice && <div className="gc-notice" role="status"><Check size={19}/> {t(notice)}<button onClick={() => setNotice('')} aria-label="Dismiss">×</button></div>}

@@ -116,3 +116,14 @@
 .gc-login label{display:grid;gap:8px}.gc-login label input{font-size:20px;font-weight:700;border-radius:16px;padding:0 18px}.gc-login label input::placeholder{font-weight:500;color:#9aaab4}
 .gc-turnstile{display:flex;justify-content:center;min-height:65px;margin:16px 0}
 .gc-dialog>img{border-radius:0;object-fit:contain}
+
+/* Desk polish: title, orders, delivery search, ledger */
+.gc-title>div:first-child{min-width:0}.gc-title .gc-eyebrow{display:block;letter-spacing:.4px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.gc-order .gc-order-status{justify-self:start;font-size:12px;font-weight:800;text-transform:none;border-radius:999px;padding:3px 9px;background:#eef4f7;color:#4f6a79}.gc-order .gc-order-status.requested{background:#fff3dc;color:#9a6200}.gc-order .gc-order-status.out_for_delivery{background:#e2f4f7;color:#0b7c91}.gc-order .gc-order-status.delivered{background:#e6f6ec;color:#1d7a46}
+label.delivery-search{display:flex!important;flex-direction:row;align-items:center}label.delivery-search svg{flex:none;color:#128da0}
+.gc-ledger-row{border:1px solid #e4edf2;background:#fff;border-radius:16px;padding:14px;display:grid;gap:12px}
+.gc-ledger-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.gc-ledger-top>span{display:grid;gap:4px;min-width:0}.gc-ledger-top>span strong{font-size:16px;color:#173748;overflow-wrap:anywhere}.gc-ledger-top small{font-size:13px;color:#6b8190}
+.gc-ledger-balance{display:grid;justify-items:end;font-size:19px;white-space:nowrap;color:#173748}.gc-ledger-balance small{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px}.gc-ledger-balance.due{color:#b4441f}.gc-ledger-balance.due small{color:#b4441f}.gc-ledger-balance.credit{color:#1d7a46}.gc-ledger-balance.credit small{color:#1d7a46}.gc-ledger-balance.clear{color:#8aa0ad}
+.gc-ledger-actions{display:flex;flex-wrap:wrap;gap:8px}.gc-ledger-actions button{flex:1 1 auto;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;background:#e7f5f7;color:#10748a;padding:10px 12px;font-weight:800;cursor:pointer;white-space:nowrap}.gc-ledger-actions button:disabled{opacity:.45;cursor:default}
+@media(min-width:900px){.gc-ledger-row{grid-template-columns:1fr auto;align-items:center}.gc-ledger-actions{flex-wrap:nowrap}.gc-ledger-actions button{flex:none}}
+@media(max-width:760px){.gc-panel{padding:18px}.gc-title .gc-eyebrow{font-size:12px}}

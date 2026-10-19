@@ -63,6 +63,14 @@ export const customerPriceSql = 'COALESCE((SELECT g.price_cents FROM app_price_g
 /** Re-price a distributor's undelivered orders after a group or a customer's group changes. Delivered orders keep what was charged. */
 export const repriceOpenOrders = (owner: number) => database().prepare(`UPDATE app_orders SET price_cents=(SELECT ${customerPriceSql} FROM app_customers c JOIN app_distributors d ON d.id=c.distributor_id WHERE c.id=app_orders.customer_id) WHERE distributor_id=? AND status<>'delivered'`).bind(owner);
 
+/** A price group id from a request body: null for none (the usual price), a number when it is this distributor's group, undefined when invalid. */
+export async function ownedPriceGroup(owner: number, value: unknown): Promise<number | null | undefined> {
+  if (value === undefined || value === null || value === '') return null;
+  const id = positiveInt(value, 2147483647);
+  if (!id) return undefined;
+  return await database().prepare('SELECT 1 FROM app_price_groups WHERE id=? AND distributor_id=?').bind(id, owner).first() ? id : undefined;
+}
+
 export type LinkedCustomer = { id: number; distributor_id: number; name: string; address: string; usual_quantity: number; /** Their price group's rate, or null for the default price. */ price_cents: number | null };
 
 /** The customer a personal request link belongs to, or null for an unknown or revoked link. */

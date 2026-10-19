@@ -1,4 +1,4 @@
-import { activeDistributorId, customerPriceSql, database, jsonError, phoneNumber, positiveInt, randomToken, sha256 } from '@/lib/commercial';
+import { activeDistributorId, customerPriceSql, database, ownedPriceGroup, jsonError, phoneNumber, positiveInt, randomToken, sha256 } from '@/lib/commercial';
 import { customerLink } from '@/lib/links';
 
 export async function GET(request: Request) {
@@ -27,12 +27,15 @@ export async function POST(request: Request) {
   const name = String(body?.name ?? '').trim().slice(0, 80) || `Customer ${phone.slice(-4)}`;
   const address = String(body?.address ?? '').trim().slice(0, 240);
   const area = String(body?.area ?? '').trim().slice(0,80);
+  // Only used when this order adds a new customer; existing customers keep their group.
+  const group = await ownedPriceGroup(owner, body?.priceGroupId);
+  if (group === undefined) return jsonError('Price group not found.', 404);
   const now = new Date().toISOString();
   const db = database();
   try {
     const [created, order] = await db.batch([
-      db.prepare('INSERT OR IGNORE INTO app_customers (distributor_id,name,phone,address,area,usual_quantity,frequency_days,request_token_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,7,?,?,?)')
-        .bind(owner, name, phone, address, area, quantity, await sha256(randomToken()), now, now),
+      db.prepare('INSERT OR IGNORE INTO app_customers (distributor_id,name,phone,address,area,usual_quantity,frequency_days,price_group_id,request_token_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,7,?,?,?,?)')
+        .bind(owner, name, phone, address, area, quantity, group, await sha256(randomToken()), now, now),
       db.prepare(`INSERT INTO app_orders (distributor_id,customer_id,quantity,price_cents,status,source,created_at,updated_at) SELECT ?,c.id,?,${customerPriceSql},'requested','distributor',?,? FROM app_customers c JOIN app_distributors d ON d.id=c.distributor_id WHERE c.distributor_id=? AND c.phone=? RETURNING id,customer_id`)
         .bind(owner, quantity, now, now, owner, phone),
     ]);

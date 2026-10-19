@@ -130,3 +130,4 @@ label.delivery-search{display:flex!important;flex-direction:row;align-items:cent
 @media(max-width:760px){.gc-panel{padding:18px}.gc-title .gc-eyebrow{font-size:12px}}
 .quick-phone input{border:0!important;box-shadow:none!important;outline:0!important;background:none!important;padding:0!important;margin:0!important}.quick-phone:focus-within{box-shadow:0 0 0 4px #0a829622}
 .gc-eyebrow{letter-spacing:.6px}
+.setup-groups{display:grid;gap:10px;margin:4px 0 18px}.setup-group{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:8px;align-items:center}.setup-group>button{font-size:22px;padding:6px 10px}.setup-add-group{display:inline-flex;align-items:center;gap:6px;justify-self:start}

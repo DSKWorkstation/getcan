@@ -1,4 +1,4 @@
-import { activeDistributorId, database, jsonError, phoneNumber, positiveInt, randomToken, repriceOpenOrders, sha256 } from '@/lib/commercial';
+import { activeDistributorId, database, jsonError, ownedPriceGroup, phoneNumber, positiveInt, randomToken, repriceOpenOrders, sha256 } from '@/lib/commercial';
 import { saveLink } from '@/lib/links';
 
 export async function GET(request: Request) {
@@ -20,11 +20,13 @@ export async function POST(request: Request) {
   const quantity = positiveInt(body?.usualQuantity ?? 2, 50);
   const frequency = positiveInt(body?.frequencyDays ?? 7, 90);
   if (!phone || !name || !quantity || !frequency) return jsonError('Check the name, phone, quantity and frequency.', 400);
+  const group = await ownedPriceGroup(owner, body?.priceGroupId);
+  if (group === undefined) return jsonError('Price group not found.', 404);
   const token = randomToken();
   const now = new Date().toISOString();
   try {
-    const row = await database().prepare('INSERT INTO app_customers (distributor_id,name,phone,address,area,usual_quantity,frequency_days,request_token_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?) RETURNING id')
-      .bind(owner, name, phone, address, area, quantity, frequency, await sha256(token), now, now).first<{ id: number }>();
+    const row = await database().prepare('INSERT INTO app_customers (distributor_id,name,phone,address,area,usual_quantity,frequency_days,price_group_id,request_token_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?) RETURNING id')
+      .bind(owner, name, phone, address, area, quantity, frequency, group, await sha256(token), now, now).first<{ id: number }>();
     if (row) await saveLink(owner, row.id, token);
     return Response.json({ id: row?.id, requestLink: `${new URL(request.url).origin}/c/${token}` }, { status: 201 });
   } catch (error) {
@@ -50,9 +52,8 @@ export async function PATCH(request: Request) {
   const frequency = positiveInt(body?.frequencyDays ?? current.frequency_days, 90);
   if (!phone || !name || !quantity || !frequency) return jsonError('Check the customer details.', 400);
   // null or '' moves the customer back to the usual price.
-  const group = body?.priceGroupId === undefined ? current.price_group_id as number | null : body.priceGroupId === null || body.priceGroupId === '' ? null : positiveInt(body.priceGroupId, 2147483647);
-  if (group === undefined || (body?.priceGroupId && !group)) return jsonError('Choose a price group.', 400);
-  if (group && !await database().prepare('SELECT 1 FROM app_price_groups WHERE id=? AND distributor_id=?').bind(group, owner).first()) return jsonError('Price group not found.', 404);
+  const group = body?.priceGroupId === undefined ? current.price_group_id as number | null : await ownedPriceGroup(owner, body.priceGroupId);
+  if (group === undefined) return jsonError('Price group not found.', 404);
   const db = database();
   try {
     await db.batch([

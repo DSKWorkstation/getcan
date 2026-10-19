@@ -114,6 +114,9 @@ const strings: Record<string, [string, string]> = {
  'Remove':['நீக்கு','हटाएँ'],
  'Save':['சேமி','सहेजें'],
  'Add':['சேர்','जोड़ें'],
+ 'Do offices or shops pay a different price?':['அலுவலகங்கள் அல்லது கடைகளுக்கு வேறு விலையா?','क्या ऑफिस या दुकानों का दाम अलग है?'],
+ 'Optional. Add a price group for each rate, like Office ₹20. Everyone else pays your usual price':['விருப்பம். ஒவ்வொரு விலைக்கும் ஒரு குழு சேர்க்கவும், எ.கா. அலுவலகம் ₹20. மற்றவர்கள் வழக்கமான விலை செலுத்துவார்கள்','वैकल्पिक। हर दाम के लिए एक समूह जोड़ें, जैसे ऑफिस ₹20। बाकी सब सामान्य दाम देंगे'],
+ 'Add another group':['இன்னொரு குழு சேர்','एक और समूह जोड़ें'],
 };
 // Tamil and Hindi live in `strings`; Telugu and Kannada in labels-te-kn.ts, both as [first, second].
 export function tx(lang: Language, english: string): string {

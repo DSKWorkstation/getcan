@@ -209,4 +209,7 @@ export const southStrings: Record<string, [string, string]> = {
  "Remove": ["తీసేయండి", "ತೆಗೆಯಿರಿ"],
  "Save": ["సేవ్", "ಉಳಿಸಿ"],
  "Add": ["జోడించండి", "ಸೇರಿಸಿ"],
+ "Do offices or shops pay a different price?": ["ఆఫీసులు లేదా షాపులకు వేరే ధరా?", "ಆಫೀಸ್ ಅಥವಾ ಅಂಗಡಿಗಳಿಗೆ ಬೇರೆ ಬೆಲೆಯೇ?"],
+ "Optional. Add a price group for each rate, like Office ₹20. Everyone else pays your usual price": ["ఐచ్ఛికం. ప్రతి ధరకు ఒక గ్రూప్ జోడించండి, ఉదా. ఆఫీస్ ₹20. మిగతా వారు మామూలు ధర చెల్లిస్తారు", "ಐಚ್ಛಿಕ. ಪ್ರತಿ ಬೆಲೆಗೆ ಒಂದು ಗುಂಪು ಸೇರಿಸಿ, ಉದಾ. ಆಫೀಸ್ ₹20. ಉಳಿದವರು ಸಾಮಾನ್ಯ ಬೆಲೆ ಕೊಡುತ್ತಾರೆ"],
+ "Add another group": ["ఇంకో గ్రూప్ జోడించండి", "ಇನ್ನೊಂದು ಗುಂಪು ಸೇರಿಸಿ"],
 };

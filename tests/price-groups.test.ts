@@ -64,4 +64,20 @@ describe('price groups', () => {
     expect((await editGroup(request('/api/commercial/price-groups', { method: 'PATCH', cookie, body: { id: theirs.id, name: 'Mine', priceCents: 100 } }))).status).toBe(404);
     expect((await removeGroup(request('/api/commercial/price-groups', { method: 'DELETE', cookie, body: { id: theirs.id } }))).status).toBe(404);
   });
+
+  it('puts a new customer in a group when they are added', async () => {
+    const added = await (await addCustomer(request('/api/commercial/customers', { cookie, body: { name: 'TCS', phone: '9123456790', priceGroupId: office } }))).json<Json>();
+    expect(db.sqlite.prepare('SELECT price_group_id FROM app_customers WHERE id=?').get(added.id)).toEqual({ price_group_id: office });
+    const order = await (await distributorOrder(request('/api/commercial/orders', { cookie, body: { customerId: added.id, quantity: 3 } }))).json<Json>();
+    expect(price(order.id)).toBe(2000);
+    expect((await addCustomer(request('/api/commercial/customers', { cookie, body: { name: 'X', phone: '9123456791', priceGroupId: 99999 } }))).status).toBe(404);
+  });
+
+  it('prices a quick order for a new customer at the chosen group, and ignores it for existing customers', async () => {
+    const fresh = await (await quickOrder(request('/api/commercial/quick-order', { cookie, body: { phone: '9123456792', quantity: 4, priceGroupId: office } }))).json<Json>();
+    expect(fresh.newCustomer).toBe(true);
+    expect(price(fresh.id)).toBe(2000);
+    const existing = await (await quickOrder(request('/api/commercial/quick-order', { cookie, body: { phone: '9123456781', quantity: 2, priceGroupId: office } }))).json<Json>();
+    expect(price(existing.id)).toBe(3500);
+  });
 });
